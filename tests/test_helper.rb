@@ -325,7 +325,7 @@ def cleanup_process(pid)
   puts "* pid: #{pid}"
   Process.kill(9, pid)
   unless RUBY_PLATFORM == 'java'
-    Process.wait(pid)
+    Process.wait(pid, Process::WNOHANG)
   end
 end
 
