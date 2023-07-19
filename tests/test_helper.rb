@@ -1,7 +1,7 @@
 require 'bundler/setup'
 require 'excon'
 require 'delorean'
-require 'open4'
+require 'open3'
 require 'webrick'
 
 require './spec/helpers/warning_helpers.rb'
@@ -316,18 +316,22 @@ def capture_response_block
 end
 
 def launch_process(*args)
-  unless RUBY_PLATFORM == 'java'
-    pid, w, r, e = Open4.popen4(*args)
-  else
-    pid, w, r, e = IO.popen4(*args)
-  end
+  w, r, e, wait_thread = Open3.popen3(*args)
+  pid = wait_thread.pid
+  puts "* launch_process: #{pid}"
   return pid, w, r, e
 end
 
 def cleanup_process(pid)
-  Process.kill(9, pid)
+  puts "* cleanup_process: #{pid}"
+  p Process.kill(0, pid)
+  begin
+    Process.kill(9, pid)
+  rescue SystemCallError => e
+    raise e unless e.errno == Errno::ESRCH
+  end
   unless RUBY_PLATFORM == 'java'
-    Process.wait(pid)
+    Process.wait(pid, Process::WNOHANG)
   end
 end
 
@@ -343,6 +347,8 @@ def with_rackup(name, host="127.0.0.1")
     process_stderr << line
   end
   yield
+rescue => e
+  p e
 ensure
   cleanup_process(pid)
 
@@ -375,6 +381,8 @@ def with_unicorn(name, listen='127.0.0.1:9292')
     # need to find suitable server for jruby
   end
   yield
+rescue => e
+  p e
 ensure
   cleanup_process(pid)
 
@@ -395,6 +403,8 @@ def with_server(name)
     process_stderr << line
   end
   yield
+rescue => e
+  p e
 ensure
   cleanup_process(pid)
 end
