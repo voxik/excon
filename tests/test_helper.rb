@@ -318,11 +318,12 @@ end
 def launch_process(*args)
   w, r, e, wait_thread = Open3.popen3(*args)
   pid = wait_thread.pid
+  puts "* launch_process: #{pid}"
   return pid, w, r, e
 end
 
 def cleanup_process(pid)
-  puts "* pid: #{pid}"
+  puts "* cleanup_process: #{pid}"
   Process.kill(9, pid)
   unless RUBY_PLATFORM == 'java'
     Process.wait(pid, Process::WNOHANG)
