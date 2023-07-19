@@ -331,6 +331,7 @@ puts "* cleanup_process: #{pid}"
   unless RUBY_PLATFORM == 'java'
     Process.wait(pid)
   end
+puts `ss -tulpn`
 end
 
 def rackup_path(*parts)
