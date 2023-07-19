@@ -321,14 +321,17 @@ def launch_process(*args)
   else
     pid, w, r, e = IO.popen4(*args)
   end
+puts "* launch_process: #{pid}"
   return pid, w, r, e
 end
 
 def cleanup_process(pid)
+puts "* cleanup_process: #{pid}"
   Process.kill(9, pid)
   unless RUBY_PLATFORM == 'java'
     Process.wait(pid)
   end
+puts `ss -tulpn`
 end
 
 def rackup_path(*parts)
