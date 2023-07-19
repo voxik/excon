@@ -325,7 +325,11 @@ end
 def cleanup_process(pid)
   puts "* cleanup_process: #{pid}"
   p Process.kill(0, pid)
-  Process.kill(9, pid)
+  begin
+    Process.kill(9, pid)
+  rescue SystemCallError => e
+    raise e unless e.errno == Errno::ESRCH
+  end
   unless RUBY_PLATFORM == 'java'
     Process.wait(pid, Process::WNOHANG)
   end
